@@ -167,4 +167,4 @@ wasm/                 編譯好的 FreeType、WOFF2
 
 - 取樣使用 [FreeType](https://freetype.org/)、WOFF2 解碼使用 [google/woff2](https://github.com/google/woff2) 與 [google/brotli](https://github.com/google/brotli)，授權條款見 `licenses/`。
 - 轉換後的 BDF 是來源字型的衍生物，請遵守來源字型自身的授權（如 OFL），工具會把著作權聲明寫進輸出檔。
-- 本專案本身的授權請自行補上 `LICENSE` 後在此註明。
+- 本專案程式碼以 [Apache 2.0](LICENSE) 授權；見 `licenses/`。
