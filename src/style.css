@@ -1,0 +1,1150 @@
+/* style.css
+   視覺方向：單色磷光終端機（呼應點陣字型／CRT 顯示器的主題）——預設是琥珀色
+   （Amber Theme），可切換成螢光綠（Green Theme），兩種都是「單一色相、只靠
+   明暗深淺分層次」的傳統單色顯示器配色，不是一般網頁的多彩配色系統。兩個
+   主題除了配色 token 外完全共用同一套版面、字體家族與字級大小——不會有
+   「切換主題時文字大小跟著變」這種狀況。
+   全站等寬字體、零圓角、髮絲級邊框，格線化排版。
+   簽名視覺元素是點陣預覽格本身——每一格都是真正逐像素繪製的方塊，
+   白底、紅色格線標示像素邊界，直接呈現「這是一個點陣字型工具」這件事
+   （這個部分刻意不跟著主題變色，因為它代表的是實際字型輸出資料，不是裝飾）。
+
+   版面設計原則：01 字型載入後收合成一行摘要；02 預覽與 03 微調並排顯示
+   （微調在旁邊、不是在下面），讓調整參數時不需捲動頁面就能看到預覽變化。
+*/
+
+:root{
+  /* 背景／邊框：near-black 但帶一點琥珀色調的暖黑，不是中性灰黑，
+     這樣背景跟前景文字才會是同一個色相家族，符合單色螢幕的觀感。 */
+  --bg: #0d0904;
+  --bg-rgb: 13, 9, 4;
+  --bg-alt: #120b04;
+  --panel: #1a1006;
+  --panel-rgb: 26, 16, 6;
+  --panel-alt: #221607;
+  --panel-alt-rgb: 34, 22, 7;
+  --border: #3d2a0f;
+  --border-strong: #5c3f14;
+
+  /* 文字：全部都是琥珀色相，只靠亮度分層次（由暗到亮）——
+     text-dim（次要提示）< text-muted（一般說明）< text（主要內文）< accent（強調）。 */
+  --text: #ffbe38;
+  --text-muted: #cf9328;
+  --text-dim: #8f6417;
+  --accent: #ffcc00;
+  --accent-strong: #ffe066;
+  --accent-dim: #8f6417;
+  --accent-soft: rgba(255, 204, 0, 0.10);
+  --accent-soft-strong: rgba(255, 204, 0, 0.22);
+  --accent-contrast: #1a1200; /* 按鈕背景是亮琥珀色時，上面文字用的深色，確保對比度 */
+  --danger: #ff6b5e;
+  --grid-red: #ff3b3b;
+
+  /* 字體：兩個主題完全共用同一套設定——字體家族、字級大小都一樣，不因為
+     切換 Amber / Green 而有任何差異，兩個主題唯一的區別只在配色 token。
+     英文用 VT323（內文）／Press Start 2P（品牌標題），中文用 Cubic 11
+     （俐方體 11 號，SIL OFL 1.1 授權，字型檔放在 fonts/Cubic_11.woff2，
+     見下面的 @font-face），IBM Plex Mono/Sans 當備援（Cubic 11 檔案還沒
+     放進去，或 Google Fonts 一時載入不了時使用）。 */
+  --font-mono: 'Cubic 11', 'VT323', 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --font-sans: 'Cubic 11', 'VT323', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Cubic 11', 'Press Start 2P', var(--font-mono);
+
+  /* 光暈：兩個主題共用同一組陰影「形狀」，顏色固定用 --accent（不是
+     currentColor）——這樣不管套在什麼元素上（就算那個元素自己的文字是
+     深色，例如 .btn-primary 的按鈕字），光暈永遠是當下主題的強調色，
+     不會因為套用對象不同而變成奇怪的顏色。 */
+  --glow-strong: 0 0 8px var(--accent), 0 0 2px var(--accent);
+  --glow-soft: 0 0 5px var(--accent);
+}
+
+/* ---------- Green Theme：配色改編自使用者提供的 hacker.css，用同一套變數
+   命名接進來，不動任何版面或元件結構——只換 token 的值，元件本身完全不用
+   重寫。純黑底、螢光綠。字體家族與字級大小（VT323/Press Start 2P/Cubic 11）
+   已經在 :root 跟 Amber Theme 共用，這裡完全不重複宣告、也不覆寫任何
+   font-size，兩個主題的文字大小應該要一模一樣。 */
+[data-theme="hacker"]{
+  --bg: #000000;
+  --bg-rgb: 0, 0, 0;
+  --bg-alt: #060a06;
+  --panel: #0a140a;
+  --panel-rgb: 10, 20, 10;
+  --panel-alt: #0e1c0e;
+  --panel-alt-rgb: 14, 28, 14;
+  --border: #114a11;
+  --border-strong: #1f7a1f;
+  --text: #33ff33;
+  --text-muted: #22b822;
+  --text-dim: #157515;
+  --accent: #00ff41;
+  --accent-strong: #7dffb0;
+  --accent-dim: #0b5c1c;
+  --accent-soft: rgba(0, 255, 65, 0.12);
+  --accent-soft-strong: rgba(0, 255, 65, 0.24);
+  --accent-contrast: #002b0a; /* 按鈕背景是亮綠色時，上面文字用的深綠黑色 */
+  --danger: #ff4d4d;
+  --grid-red: #ff3b3b;
+}
+
+/* Cubic 11（俐方體 11 號，SIL OFL 1.1 授權、專為像素風格設計的正體中文
+   點陣字型：https://github.com/ACGN-Fonts-Design/Cubic-11）——VT323／
+   Press Start 2P 都是純西文的點陣字型，沒有中文字形，不插這個的話中文字
+   會整個跳出「像素風」的視覺邏輯、退回瀏覽器預設中文字型，畫面看起來會
+   不一致。字型檔要自己放進 fonts/Cubic_11.woff2（跟 src/、wasm/、build/
+   同一層）。沒放檔案也不會壞——瀏覽器抓不到這個 @font-face 就會直接跳過，
+   中文字自動退回下一個字型（VT323 沒有中文字形，會再退到系統預設中文
+   字型），只是不會有像素風格而已，不影響其他功能。unicode-range 限制
+   只在中日韓文字才會生效，英文/數字/符號還是交給 VT323 顯示，兩者不會
+   互相干擾；範圍表跟 src/cjkDetect.js 的 CJK_RANGES 保持一致，涵蓋漢字
+   （含擴充 A）、假名、注音、諺文、CJK 標點符號、全形/半形形式等。這個
+   宣告本身不分主題，Amber／Green 兩邊都會用到。 */
+@font-face{
+  font-family: 'Cubic 11';
+  src: url('../fonts/Cubic_11.woff2') format('woff2');
+  font-display: swap;
+  unicode-range:
+    U+2E80-2EFF, U+2F00-2FDF, U+3000-303F, U+3040-30FF, U+3100-312F,
+    U+3130-318F, U+3190-31FF, U+31A0-31BF, U+31C0-31EF, U+31F0-31FF,
+    U+3200-32FF, U+3300-33FF, U+3400-4DBF, U+4E00-9FFF, U+A960-A97F,
+    U+AC00-D7A3, U+D7B0-D7FF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+}
+
+/* 光暈效果：兩個主題共用，只加在最重要的強調元素上（標題、徽章、主要按鈕、
+   選中狀態），不是整頁文字都發光——維持可讀性，光暈才會像「重點強調」
+   而不是視覺噪音。顏色由 --glow-soft / --glow-strong 決定，會自動跟著
+   目前主題換色，這裡不用寫 [data-theme="..."] 前綴。 */
+.brand-text h1,
+.step-index,
+.badge,
+.panel-head-compact h2{
+  text-shadow: var(--glow-soft);
+}
+.btn-primary{
+  box-shadow: var(--glow-strong);
+}
+.segmented-option:has(input:checked),
+.offset-btn:hover,
+.float-toggle-btn:hover,
+.hint-icon:hover,
+.hint-icon:focus-visible{
+  text-shadow: var(--glow-soft);
+}
+.glyph-cell canvas{
+  box-shadow: var(--glow-soft);
+}
+
+*{ box-sizing: border-box; }
+
+[hidden]{ display: none !important; }
+
+html, body{
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+body{
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--bg-alt) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-alt) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+.scanline-overlay{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.012) 0px,
+    rgba(255,255,255,0.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* ---------- Header ---------- */
+
+.site-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(var(--bg-rgb), 0.85);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  flex-wrap: wrap;
+}
+
+.brand{ display: flex; align-items: center; gap: 14px; }
+
+.brand-glyph{
+  width: 34px; height: 34px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.brand-glyph canvas{
+  width: 23px; height: 23px;
+  image-rendering: pixelated;
+}
+
+/* Press Start 2P 是像素點陣顯示字型，字寬比一般等寬字體大很多、也沒有粗體，
+   兩個主題現在都用這個字型顯示品牌標題，維持一般等寬字體慣用的 17px/700
+   會爆版，這裡整體調小、粗細改回一般，靠字型本身的點陣造型製造份量感
+   而不是加粗。 */
+.brand-text h1{
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  font-family: var(--font-display);
+}
+.brand-text h1 .arrow{ color: var(--accent); }
+
+.tagline{
+  margin: 1px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.header-meta{ display: flex; align-items: center; gap: 14px; }
+
+.badge{
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  background: var(--accent-soft);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.theme-toggle-btn{
+  font-size: 11px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-alt);
+  color: var(--text-muted);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.theme-toggle-btn:hover{ color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+.github-link{
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 1px;
+  transition: color .15s, border-color .15s;
+}
+.github-link:hover{ color: var(--accent); border-color: var(--accent); }
+
+/* ---------- Layout ---------- */
+
+main{
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 18px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel{
+  border: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel-head{
+  display: flex;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+
+/* 精簡版標頭：只留下編號 + 標題一行，不放說明文字，省下垂直空間。 */
+.panel-head-compact{
+  padding: 10px 16px;
+  align-items: center;
+  gap: 10px;
+}
+.panel-head-compact h2{
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.panel-head-compact h2 strong{ color: var(--accent); font-weight: 600; }
+.panel-head-compact h2 .font-title-meta{ color: var(--text-muted); font-weight: 400; }
+
+/* 「01 字型」的標題列讀取完字型後可以點擊展開/收合——收合時整個 panel-body
+   （拖放區、網址輸入、狀態文字）都會藏起來，只留標題列，字型資訊直接顯示
+   在標題文字裡。還沒讀取字型前不可收合（cursor 維持預設），所以 cursor:pointer
+   跟 hover 效果只在有 aria-expanded 且已載入字型的情況下才有意義，這裡統一
+   用 .panel-head-clickable 這個 class 控制外觀，實際能不能點由 JS 的
+   toggleFontSection() 內部判斷（沒有字型時直接 no-op）。 */
+.panel-head-clickable{ cursor: pointer; }
+.panel-head-clickable:hover{ background: var(--accent-soft); }
+
+.panel-head-chevron{
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.panel-head-controls{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 透明度滑桿：平常隱藏，只有側欄變成浮動視窗時才顯示——鎖在側欄裡的時候
+   調透明度沒有意義（背景本來就跟頁面融在一起）。 */
+.opacity-slider{
+  display: none;
+  width: 50px;
+  accent-color: var(--accent);
+}
+.panel-sidebar.floating .opacity-slider{ display: inline-block; }
+
+.float-toggle-btn{
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-alt);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.float-toggle-btn:hover{ color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.panel-sidebar.floating .float-toggle-btn{ color: var(--accent); border-color: var(--accent-dim); }
+
+.step-index{
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  background: var(--accent-soft);
+  padding: 2px 7px;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.panel-head h2{
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.step-desc{
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.panel-body{
+  padding: 18px;
+}
+.panel-body-compact{ padding: 14px 16px; }
+
+/* ---------- 01 字型：dropzone / 讀取狀態 / 收合後的摘要列 ---------- */
+
+.dropzone{
+  border: 1px dashed var(--border-strong);
+  background: var(--bg-alt);
+  padding: 18px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone:focus-visible, .dropzone.dragover{
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  outline: none;
+}
+
+.dropzone-inner{ display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+.dropzone-icon{
+  width: 26px; height: 26px;
+  border: 1px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--panel);
+  flex-shrink: 0;
+}
+.dropzone-icon canvas{ width: 16px; height: 16px; image-rendering: pixelated; }
+
+.dropzone-title{ margin: 0; font-size: 13px; }
+.dropzone-hint{ margin: 0; font-size: 11px; color: var(--text-dim); }
+
+.font-url-row{
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.font-url-input{
+  flex: 1;
+  min-width: 0;
+}
+
+.font-status{
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.font-status .status-idle{ margin: 0; color: var(--text-dim); }
+.font-status .status-line{ margin: 0; color: var(--text-muted); }
+.font-status .status-line strong{ color: var(--text); font-weight: 600; }
+.font-status .status-error{ margin: 0; color: var(--danger); }
+
+/* 字型讀取成功後：dropzone 收起來，改顯示這一行精簡摘要 + 更換字型按鈕 */
+.font-summary-bar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  flex-wrap: wrap;
+}
+.font-summary-info{
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+.font-summary-info strong{ color: var(--text); font-weight: 600; }
+.font-summary-info .summary-sep{ color: var(--text-dim); margin: 0 6px; }
+
+/* ---------- Fields（通用） ---------- */
+
+.field{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.field span{ display: flex; justify-content: space-between; gap: 8px; }
+.field output{ color: var(--accent); font-weight: 600; }
+
+.field-inline{
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.field-inline span{ display: inline; }
+.field-inline-standalone{ align-self: flex-end; margin-bottom: 12px; }
+
+.field-note{
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+/* 滑鼠移入才顯示的說明提示，取代原本一直佔位置的 field-note 長文字。
+   用純 CSS ::after 做，不靠瀏覽器原生 title（樣式不受控、延遲也不好調）。
+   零圓角、方形小徽章，跟整體「像素格」風格一致，不用圓形的 info icon。 */
+.hint-icon{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-style: italic;
+  cursor: help;
+  transition: color .15s, border-color .15s;
+}
+.hint-icon:hover, .hint-icon:focus-visible{
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+
+.hint-icon::after{
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: min(280px, 80vw);
+  padding: 10px 12px;
+  background: var(--panel-alt);
+  border: 1px solid var(--accent-dim);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-sans);
+  font-style: normal;
+  line-height: 1.6;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease;
+  z-index: 80;
+}
+.hint-icon:hover::after,
+.hint-icon:focus-visible::after{
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+input[type="text"],
+input[type="number"],
+select{
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 7px 9px;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+}
+::placeholder {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus{ border-color: var(--accent); }
+
+/* 原生表單元件（checkbox / range / progress / 捲軸）：瀏覽器預設外觀是
+   系統灰階，不會跟著 --accent 這種自訂變數走，不特別處理的話，切換
+   Amber／Green 主題時只有背景/文字換色、這幾個小控制項卻維持系統原生的
+   灰色，看起來像沒套用到主題。下面統一用 appearance:none 拿掉原生外觀，
+   自己畫成跟站台一致的零圓角、髮絲邊框風格，讓「選中/已填滿」的部分用
+   --accent，「未選中/軌道底色」的部分也明確指定成主題的深色 token（不是
+   放著讓瀏覽器自己決定），兩種狀態都會跟著主題變。 */
+
+input[type="checkbox"]{
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px; height: 15px;
+  flex-shrink: 0;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+  position: relative;
+  cursor: pointer;
+}
+input[type="checkbox"]:checked{
+  background: var(--accent);
+  border-color: var(--accent);
+}
+input[type="checkbox"]:checked::after{
+  /* 打勾符號直接用兩條旋轉的色塊拼成一個核取記號，維持跟站台其他地方
+     一樣的「方塊拼出圖形」點陣風格，不用字型符號或 SVG。 */
+  content: '';
+  position: absolute;
+  left: 3px; top: 0px;
+  width: 5px; height: 9px;
+  border: solid var(--accent-contrast);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible{ outline: 1px solid var(--accent); outline-offset: 2px; }
+
+input[type="range"]{
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent; /* 真正的軌道顏色交給下面的 track 偽元素畫，這裡不能有背景，
+                               不然 Firefox 會把這層背景疊在 track 外面變成一圈色塊 */
+}
+input[type="range"]::-webkit-slider-runnable-track{
+  height: 4px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+}
+input[type="range"]::-moz-range-track{
+  height: 4px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+}
+input[type="range"]::-moz-range-progress{
+  /* Chrome 靠 accent-color 自動畫出「滑到這裡為止」的填滿段，Firefox 沒有
+     這個機制、軌道左半段預設還是跟右半段同一個灰色，要自己補上填滿色。 */
+  height: 4px;
+  background: var(--accent);
+}
+input[type="range"]::-webkit-slider-thumb{
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px; height: 16px;
+  margin-top: -7px; /* (16 - 4)/2，把方塊滑鈕對齊到 4px 高的軌道正中間 */
+  background: var(--accent);
+  border: 1px solid var(--accent-contrast);
+}
+input[type="range"]::-moz-range-thumb{
+  width: 12px; height: 16px;
+  background: var(--accent);
+  border: 1px solid var(--accent-contrast);
+  border-radius: 0;
+}
+input[type="range"]:focus-visible{ outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb{ outline: 1px solid var(--accent); outline-offset: 2px; }
+input[type="range"]:focus-visible::-moz-range-thumb{ outline: 1px solid var(--accent); outline-offset: 2px; }
+
+/* 捲軸：只有 WebKit／Blink 系（Chrome、Edge、Safari）支援 ::-webkit-scrollbar
+   這組偽元素做細部造型；Firefox 用 scrollbar-color 只能指定滑塊/軌道兩種
+   顏色、款式固定，沒辦法做到完全一樣的髮絲邊框，但至少顏色會跟著主題走，
+   不會維持系統預設的灰色。套用在 html 上、讓全站（包含浮動微調視窗裡會
+   出現的橫向捲軸）都吃到同一套樣式，不用每個可捲動容器各自加一次。 */
+html{
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-dim) var(--bg-alt);
+}
+::-webkit-scrollbar{ width: 10px; height: 10px; }
+::-webkit-scrollbar-track{ background: var(--bg-alt); border: 1px solid var(--border); }
+::-webkit-scrollbar-thumb{ background: var(--accent-dim); border: 1px solid var(--border-strong); }
+::-webkit-scrollbar-thumb:hover{ background: var(--accent); }
+::-webkit-scrollbar-corner{ background: var(--bg-alt); }
+
+.preview-text-input{
+  width: 100%;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+/* ---------- 02 + 03：預覽（主欄）與微調（側欄）並排 ---------- */
+
+.preview-tune-row{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: stretch; /* 兩欄拉伸到同一高度：側欄的外框會跟著預覽區一起變高，
+                            不會出現預覽格變多時側欄看起來被截斷、跟不上的狀況。 */
+}
+
+/* 微調區切成浮動視窗時：側欄用 position:fixed 拉出版面之外自己飄著，
+   這裡把 Grid 的第二欄收掉，讓左側預覽區直接補滿整個寬度。 */
+.preview-tune-row.tune-floating{
+  grid-template-columns: 1fr;
+}
+
+/* 浮動視窗本體：固定定位、比一般側欄更明顯的邊框與陰影，看起來「浮在上面」。
+   位置／寬度由 JS 決定初始值（浮動當下側欄原本所在的位置），拖曳時也是 JS 直接改
+   style.left / style.top，這裡只定義浮動狀態「長什麼樣子」，不寫死座標。
+   背景改用 rgba + --float-opacity（JS 透過滑桿設定，預設 0.7），這樣才能透出
+   後面的預覽內容；控制項本身（input/select/按鈕）都有自己不透明的背景色，
+   文字不會因此變得難以閱讀，只有面板的「底色」是透的。 */
+.panel-sidebar.floating{
+  position: fixed;
+  z-index: 60;
+  max-height: 82vh;
+  border-color: var(--accent-dim);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px var(--accent-dim);
+  background: rgba(var(--panel-rgb), var(--float-opacity, 0.7));
+  backdrop-filter: blur(4px);
+}
+.panel-sidebar.floating .panel-head{
+  cursor: move;
+  user-select: none;
+  background: rgba(var(--panel-alt-rgb), var(--float-opacity, 0.7));
+}
+.panel-sidebar.floating .tune-sidebar-body{
+  max-height: calc(82vh - 46px); /* 扣掉標頭高度，內容太多時面板自己捲動 */
+}
+.panel-sidebar.floating.dragging{ opacity: 0.92; }
+
+.tune-sidebar-body{
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-height: 0;   /* 讓 flex 子元素可以縮小到比內容小，捲軸才會生效而不是把父層撐開 */
+  overflow-y: auto; /* 高度由左側預覽區決定；內容超出這個高度時側欄自己出現捲軸 */
+}
+
+.tune-block h3{
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tune-block .field:last-child{ margin-bottom: 0; }
+
+.tune-block-cols2{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.segmented{ display: flex; border: 1px solid var(--border-strong); }
+.segmented-compact{ width: 100%; }
+.segmented-compact .segmented-option{ flex: 1; text-align: center; }
+.segmented-option{
+  position: relative;
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-strong);
+}
+.segmented-option:last-child{ border-right: none; }
+.segmented-option input{ position: absolute; opacity: 0; }
+.segmented-option em{ font-style: normal; color: var(--text-dim); font-size: 11px; }
+.segmented-option:has(input:checked){
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.segmented-option:has(input:checked) em{ color: var(--accent-dim); }
+.segmented-option:has(input:focus-visible){ outline: 1px solid var(--accent); }
+
+/* ---------- Offset pad ---------- */
+/* CJK／非CJK 兩組方向鍵並排放在同一列，各自欄位內：說明字 → 方向鍵 → 座標值，
+   由上到下排列。鎖定狀態下只有 CJK 那欄會顯示（非CJK欄位整個 hidden），
+   這時候不需要「CJK」這個小字說明，跟 offsetGroupNonCjk 的 hidden 狀態一起
+   由 JS 的 updateOffsetGroupsVisibility() 控制。 */
+.offset-groups-row{
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.offset-group-col{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.offset-group-caption{
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.offset-pad{
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  grid-template-rows: repeat(3, 28px);
+  gap: 3px;
+  flex-shrink: 0;
+}
+.offset-btn{
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.offset-btn:hover{ color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.offset-btn-reset{ color: var(--accent-dim); }
+
+.offset-value{ margin: 0; white-space: nowrap; }
+
+/* ---------- 舊版「04 轉檔」仍沿用的多欄格線 ---------- */
+
+.tune-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+.tune-group h3{
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.tune-group-wide{ grid-column: 1 / -1; }
+
+/* FONT_ASCENT + FONT_DESCENT 大於輸出尺寸時的警示樣式：深色主題下用偏淡的
+   珊瑚紅（--danger）而不是純紅色，確保在深色背景上還是讀得清楚。 */
+.metric-warning-mark{
+  color: var(--danger);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.metric-warning-note{
+  color: var(--danger) !important;
+}
+.metric-input-warning{
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* ---------- 點陣預覽格：白底 + 紅色像素格線 ---------- */
+
+.preview-grid{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.glyph-cell{
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+}
+
+.glyph-cell canvas{
+  border: 1px solid var(--border-strong);
+  /* 畫布本身已經用實際目標解析度繪製白底黑字 + 紅色格線，
+     不需要再靠 CSS 縮放，所以這裡不用 image-rendering:pixelated。 */
+}
+
+.glyph-cell .glyph-label{
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.glyph-cell.glyph-missing .glyph-label{ color: var(--danger); }
+
+/* ---------- Buttons ---------- */
+
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-alt);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .15s, background .15s, color .15s, opacity .15s;
+}
+.btn:disabled{ opacity: 0.4; cursor: not-allowed; }
+
+.btn-small{ padding: 6px 12px; font-size: 11.5px; flex-shrink: 0; }
+.btn-block{ width: 100%; }
+
+.btn-primary{
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+.btn-primary:hover:not(:disabled){ background: var(--accent-strong); border-color: var(--accent-strong); }
+
+.btn-secondary:hover{ border-color: var(--accent); color: var(--accent); }
+
+.btn-download{
+  background: var(--accent-soft);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  margin-top: 14px;
+}
+.btn-download:hover{ background: var(--accent-soft-strong); }
+
+.progress-row{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+progress{
+  width: 220px;
+  height: 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-strong);
+}
+progress::-webkit-progress-bar{ background: var(--bg-alt); }
+progress::-webkit-progress-value{ background: var(--accent); }
+progress::-moz-progress-bar{ background: var(--accent); } /* Firefox 的軌道底色就是上面 progress 本身的 background，
+                                                               這裡只需要補上「已完成」那段的顏色 */
+
+.convert-status{
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Footer ---------- */
+
+.site-footer{
+  text-align: center;
+  padding: 20px 24px 40px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+}
+
+/* ---------- Engine visibility toggling (set via body[data-engine]) ---------- */
+
+body[data-engine="freetype"] .engine-canvas-only{ display: none; }
+body[data-engine="canvas"] .engine-freetype-only{ display: none; }
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px){
+  .preview-tune-row{ grid-template-columns: 1fr; align-items: start; }
+  .tune-sidebar-body{ flex: 0 1 auto; min-height: auto; overflow-y: visible; }
+}
+
+@media (max-width: 640px){
+  .site-header{ padding: 12px 16px; }
+  main{ padding: 14px 12px 48px; }
+  .panel-body{ padding: 14px; }
+}
+
+/* ---------- 全形／半形切換（預覽區 + 微調區標籤 + 轉檔區） ---------- */
+
+/* 預覽文字輸入列：左邊全形／半形 radio（沿用引擎選擇用的 segmented 樣式），右邊文字框。 */
+.preview-input-row{
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.preview-input-row .preview-text-input{
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.preview-mode-selector{ flex-shrink: 0; }
+.preview-mode-selector .segmented-option{
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.preview-dim-note{
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-family: var(--font-sans);
+  color: var(--text-dim);
+}
+
+/* 預覽區上方的提示列：文字框內容跟目前的全形／半形模式不符、或半形字寬超出格子時顯示。 */
+.mode-hint{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--accent-dim);
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+.mode-hint-warn{ border-color: var(--danger); }
+.mode-hint-text{ flex: 1; min-width: 180px; }
+
+/* 預覽格：模式不符的字用紅色虛線框；墨跡被格子裁掉的字，標籤變紅提醒。 */
+.glyph-cell.glyph-mismatch{
+  border-style: dashed;
+  border-color: var(--danger);
+}
+.glyph-cell.glyph-mismatch .glyph-label,
+.glyph-cell.glyph-clipped .glyph-label{ color: var(--danger); }
+
+/* 微調面板標題旁邊的「目前編輯：全形／半形」小徽章。 */
+.mode-badge{
+  padding: 1px 8px;
+  border: 1px solid var(--accent-dim);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.size-dim-note{ margin: -4px 0 12px; }
+
+/* 半形時「CJK／非CJK 鎖定」選項 disable。 */
+.offset-lock-toggle.is-disabled{
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.offset-lock-toggle.is-disabled input{ cursor: not-allowed; }
+
+/* 04 轉檔：字碼範圍群組 */
+.export-subgroup{
+  margin: -2px 0 10px 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border-strong);
+}
+.export-subgroup.is-disabled{ opacity: 0.45; }
+.export-advanced{
+  margin: 6px 0 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.export-advanced summary{ cursor: pointer; color: var(--text-dim); margin-bottom: 8px; }
+.export-advanced[open] summary{ color: var(--text-muted); }
+
+.download-links{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.convert-report{
+  margin-top: 12px;
+  font-size: 12px;
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+.convert-report p{ margin: 0 0 4px; }
+.convert-report .report-warn{ color: var(--danger); }
+
+/* 半形「字寬」區塊（等寬／不等寬）：不等寬的參數表單沿用一般 .field 樣式，只需要一點間距。 */
+#propOptions{ margin-top: 10px; }
+#propOptions .field{ margin-bottom: 8px; }
+#propOptions .tune-block-cols2{ margin-bottom: 0; }
+#propOverridesNote:empty{ display: none; }
+#propOverridesNote.is-error{ color: var(--danger); }
+
+/* ---------- Footer (對接 style.css 變數系統) ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg-alt);
+  text-align: center;
+  padding: 24px 20px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 40px;
+}
+
+.site-footer p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* 核心提示區：帶有面板質感的微型提示框 */
+.footer-notice {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.footer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.footer-meta strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* 底部連結列 */
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.site-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 1px;
+  transition: color .15s, border-color .15s;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.site-footer .divider {
+  color: var(--text-dim);
+}
+
+/* 版本號：呼應上方 badge 的微型標籤外觀 */
+.site-footer .version {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  background: var(--accent-soft);
+  padding: 1px 6px;
+  border: 1px solid var(--accent-dim);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+}

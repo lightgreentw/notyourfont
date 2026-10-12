@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Not Your FONT｜點陣字型轉換工具</title>
+<meta name="description" content="在瀏覽器內把 TTF/OTF/TTC 字型轉成 BDF 點陣字型檔，內建與桌面版相同的 FreeType 引擎，全程不上傳伺服器。" />
+<link rel="icon" href="notyourfont_icon.ico" type="image/x-icon" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500&family=VT323&family=Press+Start+2P&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+
+<div class="scanline-overlay" aria-hidden="true"></div>
+
+<header class="site-header">
+  <div class="brand">
+    <div class="brand-glyph" aria-hidden="true">
+      <canvas id="brandCanvas" width="9" height="9"></canvas>
+    </div>
+    <div class="brand-text">
+      <h1>Not Your FONT</h1>
+      <p class="tagline">點陣字型轉換工具 · 瀏覽器端 · FreeType 原生引擎</p>
+    </div>
+  </div>
+  <div class="header-meta">
+    <button type="button" id="changeFontButton" class="btn btn-secondary btn-small" hidden>更換字型</button>
+    <button type="button" id="themeToggleButton" class="theme-toggle-btn" title="切換主題（Amber / Green）">
+      <span id="themeToggleLabel">Green Theme</span>
+    </button>
+    <span class="badge" id="engineBadge">引擎：FreeType</span>
+    <a class="github-link" href="https://github.com/lightgreentw/notyourfont" id="githubLink" target="_blank" rel="noopener">原始碼 / GitHub</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- 01 字型：載入後自動收合成一行摘要，按「更換字型」才會重新展開 -->
+  <section class="panel" id="section-font">
+    <div class="panel-head panel-head-compact panel-head-clickable" id="fontSectionHeader" role="button" tabindex="0" aria-expanded="true" aria-label="展開／收合字型選擇區">
+      <span class="step-index">01</span>
+      <h2 id="fontSectionTitle">字型</h2>
+      <span class="panel-head-chevron" id="fontSectionChevron" hidden>▾</span>
+    </div>
+    <div class="panel-body panel-body-compact" id="fontPanelBody">
+
+      <div class="dropzone" id="dropZone" tabindex="0" role="button" aria-label="選擇或拖曳字型檔案">
+        <input type="file" id="fontFileInput" accept=".ttf,.otf,.ttc,.woff2,font/ttf,font/otf,font/collection,font/woff2" hidden />
+        <div class="dropzone-inner">
+          <div class="dropzone-icon" aria-hidden="true">
+            <canvas id="dropIconCanvas" width="7" height="7"></canvas>
+          </div>
+          <p class="dropzone-title">拖放字型檔到這裡，或點擊選擇</p>
+          <p class="dropzone-hint">支援 .ttf / .otf / .ttc / .woff2　·　所有解析與渲染都在瀏覽器內完成，檔案不會上傳</p>
+        </div>
+      </div>
+
+      <div class="font-url-row">
+        <input type="text" id="fontUrlInput" class="font-url-input" placeholder="或直接貼字型檔網址（.ttf / .otf / .ttc / .woff2）" />
+        <button type="button" id="fontUrlLoadButton" class="btn btn-secondary btn-small">從網址載入</button>
+      </div>
+      <p class="field-note">只能讀取「對方伺服器有開放跨來源存取（CORS）」的網址——這是瀏覽器的安全限制，不是這個工具能繞過的。Google Fonts、GitHub、jsDelivr 這類 CDN 通常可以，一般網站不一定。</p>
+
+      <div class="font-status" id="fontStatus">
+        <p class="status-idle">尚未讀取字型檔。</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 02 預覽（主要區域） + 03 微調（側欄）：並排顯示，調整參數時不需捲動就能看到效果 -->
+  <div class="preview-tune-row">
+
+    <section class="panel panel-main" id="section-preview">
+      <div class="panel-head panel-head-compact">
+        <span class="step-index">02</span>
+        <h2>點陣預覽</h2>
+      </div>
+      <div class="panel-body">
+        <div class="preview-input-row">
+          <div class="segmented preview-mode-selector" id="previewModeSelector" role="radiogroup" aria-label="預覽字寬">
+            <label class="segmented-option">
+              <input type="radio" name="previewMode" id="previewModeFull" value="full" checked />
+              <span>全形</span>
+            </label>
+            <label class="segmented-option">
+              <input type="radio" name="previewMode" id="previewModeHalf" value="half" />
+              <span>半形</span>
+            </label>
+          </div>
+          <input type="text" id="previewText" class="preview-text-input" value="微風輕彿，舒體通暢「！…；？）" placeholder="輸入要預覽的文字" />
+        </div>
+        <p class="preview-dim-note" id="previewDimNote"></p>
+        <div class="mode-hint" id="previewModeHint" role="status" hidden>
+          <span class="mode-hint-text" id="previewModeHintText"></span>
+          <button type="button" class="btn btn-secondary btn-small" id="previewModeHintButton"></button>
+        </div>
+        <div class="mode-hint mode-hint-warn" id="previewClipHint" role="status" hidden>
+          <span class="mode-hint-text" id="previewClipHintText"></span>
+        </div>
+        <div class="preview-grid" id="previewGrid"></div>
+      </div>
+    </section>
+
+    <section class="panel panel-sidebar" id="section-tune">
+      <div class="panel-head panel-head-compact" id="tuneDragHandle">
+        <span class="step-index">03</span>
+        <h2>微調點陣字</h2>
+        <span class="mode-badge" id="tuneModeBadge" title="目前正在編輯哪一組參數（全形與半形的微調參數各自獨立記錄，轉檔時分別套用）">全形</span>
+        <div class="panel-head-controls">
+          <input type="range" id="floatOpacitySlider" class="opacity-slider" min="30" max="100" value="70" title="浮動視窗透明度" aria-label="浮動視窗透明度" />
+          <button type="button" id="floatToggleButton" class="float-toggle-btn" aria-label="切換浮動視窗" title="切換浮動視窗">⤢</button>
+        </div>
+      </div>
+      <div class="panel-body tune-sidebar-body">
+
+        <div class="tune-block">
+          <h3>取樣引擎</h3>
+          <div class="segmented segmented-compact" id="engineSelector">
+            <label class="segmented-option">
+              <input type="radio" name="engine" id="engineFreetype" value="freetype" checked />
+              <span>FreeType</span>
+            </label>
+            <label class="segmented-option">
+              <input type="radio" name="engine" id="engineCanvas" value="canvas" />
+              <span>Canvas</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="tune-block tune-block-cols2">
+          <label class="field">
+            <span>取樣尺寸（字高）</span>
+            <input type="number" id="cellSizeInput" min="7" max="32" value="16" />
+          </label>
+          <label class="field">
+            <span>輸出尺寸（字高）</span>
+            <input type="number" id="outputSizeInput" min="7" max="32" value="16" />
+          </label>
+        </div>
+        <p class="field-note size-dim-note" id="sizeDimNote"></p>
+
+        <div class="tune-block" id="halfWidthBlock" hidden>
+          <h3>字寬</h3>
+          <div class="segmented segmented-compact" id="widthModeSelector">
+            <label class="segmented-option">
+              <input type="radio" name="widthMode" id="widthModeFixed" value="fixed" checked />
+              <span>等寬</span>
+            </label>
+            <label class="segmented-option">
+              <input type="radio" name="widthMode" id="widthModeProp" value="proportional" />
+              <span>不等寬</span>
+            </label>
+          </div>
+          <div id="propOptions" hidden>
+            <label class="field">
+              <span>寬度來源</span>
+              <select id="propSourceSelect">
+                <option value="font" selected>字型 advance（預設）</option>
+                <option value="ink">墨跡寬度 + 間距</option>
+              </select>
+            </label>
+            <label class="field" id="propRoundingField">
+              <span>advance 取整方式</span>
+              <select id="propRoundingSelect">
+                <option value="round" selected>四捨五入</option>
+                <option value="ceil">無條件進位</option>
+                <option value="floor">無條件捨去</option>
+              </select>
+            </label>
+            <div class="tune-block-cols2">
+              <label class="field">
+                <span>字距調整（px）</span>
+                <input type="number" id="propLetterSpacingInput" min="-8" max="16" value="0" />
+              </label>
+              <label class="field" id="propInkGapField" hidden>
+                <span>墨跡間距（px）</span>
+                <input type="number" id="propInkGapInput" min="0" max="16" value="1" />
+              </label>
+            </div>
+            <div class="tune-block-cols2">
+              <label class="field">
+                <span>最小字寬（px）</span>
+                <input type="number" id="propMinWidthInput" min="1" max="32" value="1" />
+              </label>
+              <label class="field">
+                <span>最大字寬（0 = 不限）</span>
+                <input type="number" id="propMaxWidthInput" min="0" max="64" value="0" />
+              </label>
+            </div>
+            <label class="field">
+              <span>墨跡超出字寬框時</span>
+              <select id="propOverflowSelect">
+                <option value="widen" selected>自動加寬（預設）</option>
+                <option value="crop">裁切</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>空白字寬（0 = 自動）</span>
+              <input type="number" id="propSpaceWidthInput" min="0" max="64" value="0" />
+            </label>
+            <label class="field">
+              <span>例外覆寫（字元=字寬）</span>
+              <input type="text" id="propOverridesInput" placeholder="例如 i=3, l=3, W=10, space=4" spellcheck="false" />
+            </label>
+            <p class="field-note" id="propOverridesNote"></p>
+            <p class="field-note">每個字的字寬由同一條規則算出：先取「寬度來源」，加上字距，再套用上下限；空白字寬與例外覆寫是精確指定，不受字距、上下限與自動加寬影響。「位置偏移 X」＝墨跡在自己的字寬框內平移；墨跡超出字寬框時，選「自動加寬」會把字寬加到放得下為止（最大字寬是上限，超過上限的部分才裁切），選「裁切」則字寬不變、超出的墨跡被裁掉。BBX 貼緊墨跡。</p>
+          </div>
+        </div>
+
+        <div class="tune-block">
+          <h3>位置偏移</h3>
+          <div class="offset-groups-row">
+            <div class="offset-group-col">
+              <p class="offset-group-caption" id="offsetGroupCjkCaption" hidden>CJK</p>
+              <div class="offset-pad" role="group" aria-label="位置偏移（CJK）">
+                <span></span>
+                <button type="button" id="offsetUpCjk" class="offset-btn" aria-label="向上偏移">▲</button>
+                <span></span>
+                <button type="button" id="offsetLeftCjk" class="offset-btn" aria-label="向左偏移">◀</button>
+                <button type="button" id="offsetResetCjk" class="offset-btn offset-btn-reset" aria-label="重置偏移">●</button>
+                <button type="button" id="offsetRightCjk" class="offset-btn" aria-label="向右偏移">▶</button>
+                <span></span>
+                <button type="button" id="offsetDownCjk" class="offset-btn" aria-label="向下偏移">▼</button>
+                <span></span>
+              </div>
+              <p class="field-note offset-value" id="offsetValueCjk">X=0, Y=0</p>
+            </div>
+
+            <div class="offset-group-col" id="offsetGroupNonCjk" hidden>
+              <p class="offset-group-caption">非 CJK</p>
+              <div class="offset-pad" role="group" aria-label="位置偏移（非 CJK）">
+                <span></span>
+                <button type="button" id="offsetUpNonCjk" class="offset-btn" aria-label="非 CJK 向上偏移">▲</button>
+                <span></span>
+                <button type="button" id="offsetLeftNonCjk" class="offset-btn" aria-label="非 CJK 向左偏移">◀</button>
+                <button type="button" id="offsetResetNonCjk" class="offset-btn offset-btn-reset" aria-label="重置非 CJK 偏移">●</button>
+                <button type="button" id="offsetRightNonCjk" class="offset-btn" aria-label="非 CJK 向右偏移">▶</button>
+                <span></span>
+                <button type="button" id="offsetDownNonCjk" class="offset-btn" aria-label="非 CJK 向下偏移">▼</button>
+                <span></span>
+              </div>
+              <p class="field-note offset-value" id="offsetValueNonCjk">X=0, Y=0</p>
+            </div>
+          </div>
+
+          <label class="field field-inline offset-lock-toggle" id="lockOffsetsField">
+            <input type="checkbox" id="lockOffsetsCheckbox" checked />
+            <span>CJK／非CJK 鎖定一起偏移</span>
+            <span class="hint-icon" tabindex="0" data-tooltip="取消鎖定後，CJK 跟非 CJK 字元可以各自獨立微調位置——同一條基準線下，兩者伸出去的量常常不一樣多（例如拉丁字母的 g／j／y 下降部），單一組偏移調不出兩邊都好的結果時用得到。">i</span>
+          </label>
+          <p class="field-note" id="halfOffsetNote" hidden>半形（ASCII）沒有 CJK／非 CJK 之分，只有一組偏移；基準線與全形共用同一個 FONT_ASCENT。</p>
+        </div>
+
+        <div class="tune-block">
+          <h3>基準線</h3>
+          <label class="field field-inline">
+            <input type="checkbox" id="alignAllCheckbox" checked />
+            <span>字元對齊基準線</span>
+            <span class="hint-icon" tabindex="0" data-tooltip="預覽格上的綠色粗虛線是目前的基準線（row = FONT_ASCENT，見下方「字型度量」）。勾選後，所有字元（不分 CJK／拉丁）一律貼齊這條線，取代字型本身的全域 ascender——避免 CJK+拉丁混合字型裡兩者各自為政、用「位置偏移」怎麼調都顧此失彼。">i</span>
+          </label>
+        </div>
+
+        <div class="tune-block">
+          <label class="field">
+            <span>黑白門檻值 <output id="thresholdValue">128</output></span>
+            <input type="range" id="thresholdSlider" min="0" max="255" value="128" />
+          </label>
+        </div>
+
+        <div class="tune-block engine-only engine-canvas-only">
+          <h3>Canvas 專屬</h3>
+          <div class="tune-block-cols2">
+            <label class="field">
+              <span>Gamma</span>
+              <input type="number" id="gammaInput" min="0.1" max="5" step="0.1" value="1.0" />
+            </label>
+            <label class="field">
+              <span>對比度</span>
+              <input type="number" id="contrastInput" min="-100" max="100" step="1" value="0" />
+            </label>
+          </div>
+          <label class="field field-inline">
+            <input type="checkbox" id="antiAliasCheckbox" checked />
+            <span>反鋸齒</span>
+          </label>
+          <label class="field">
+            <span>超取樣倍率</span>
+            <select id="supersampleSelect">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="4" selected>4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="tune-block engine-only engine-freetype-only">
+          <h3>FreeType 專屬</h3>
+          <label class="field">
+            <span>提示模式</span>
+            <select id="hintingSelect">
+              <option value="default" selected>字型內建（預設）</option>
+              <option value="forceAutohint">強制自動提示</option>
+              <option value="noHinting">停用提示</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>渲染目標</span>
+            <select id="freetypeTargetSelect">
+              <option value="mono" selected>Mono（硬性二值，預設）</option>
+              <option value="normal">Normal（灰階）</option>
+              <option value="light">Light（灰階，垂直輕量提示）</option>
+            </select>
+          </label>
+          <label class="field field-inline">
+            <input type="checkbox" id="preferEmbeddedBitmapCheckbox" checked />
+            <span>優先使用內嵌點陣圖</span>
+          </label>
+        </div>
+
+        <div class="tune-block tune-block-cols2">
+          <label class="field">
+            <span>粗細調整</span>
+            <input type="number" id="boldAdjustInput" min="-5" max="5" step="1" value="0" />
+          </label>
+          <label class="field field-inline field-inline-standalone">
+            <input type="checkbox" id="invertCheckbox" />
+            <span>反相輸出</span>
+          </label>
+        </div>
+
+        <button type="button" id="resetParamsButton" class="btn btn-secondary btn-block">重置微調參數（全形）</button>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 04 轉檔 -->
+  <section class="panel" id="section-export">
+    <div class="panel-head panel-head-compact">
+      <span class="step-index">04</span>
+      <h2>字型度量與轉檔</h2>
+    </div>
+    <div class="panel-body tune-grid">
+
+      <div class="tune-group">
+        <h3>字型度量<span class="metric-warning-mark" id="metricWarningMark" hidden>&nbsp;*</span></h3>
+        <label class="field">
+          <span>FONT_ASCENT</span>
+          <input type="number" id="fontAscentInput" value="13" />
+        </label>
+        <label class="field">
+          <span>FONT_DESCENT</span>
+          <input type="number" id="fontDescentInput" value="3" />
+        </label>
+        <p class="field-note">自動換算：FONT_ASCENT 取字型上緣度量（優先 OS/2 typo，其次 hhea）按「全形」輸出字高縮放，FONT_DESCENT = 字高 − FONT_ASCENT，兩者相加剛好等於字高；可手動覆寫。全形、半形兩個 BDF 共用同一組（基準線一致），BBX 的垂直位置以 FONT_ASCENT 為基準線。</p>
+        <p class="field-note" id="baselineConsistencyNote" hidden></p>
+        <p class="field-note metric-warning-note" id="metricWarningNote" hidden></p>
+      </div>
+
+      <div class="tune-group">
+        <h3>字碼範圍</h3>
+        <label class="field field-inline">
+          <input type="checkbox" id="exportHalfCheckbox" checked />
+          <span>半形（ASCII U+0020–007E）</span>
+        </label>
+        <label class="field field-inline">
+          <input type="checkbox" id="exportFullCheckbox" checked />
+          <span>全形</span>
+        </label>
+        <div class="export-subgroup" id="exportFullSub">
+          <label class="field field-inline">
+            <input type="checkbox" id="exportCjkCheckbox" checked />
+            <span>CJK（漢字、假名、注音、諺文…）</span>
+          </label>
+          <label class="field field-inline">
+            <input type="checkbox" id="exportNonCjkCheckbox" checked />
+            <span>非 CJK（全形英數符號、希臘、箱線…）</span>
+          </label>
+        </div>
+        <details class="export-advanced" id="exportAdvanced">
+          <summary>進階：限定全形碼位範圍（選填）</summary>
+          <label class="field">
+            <span>起始（十六進位）</span>
+            <input type="text" id="codeStartInput" placeholder="例如 4E00" />
+          </label>
+          <label class="field">
+            <span>結束（十六進位）</span>
+            <input type="text" id="codeEndInput" placeholder="例如 9FFF" />
+          </label>
+          <p class="field-note">兩欄都留空 = 不限制。只作用在「全形」，且仍須符合上面 CJK／非 CJK 的勾選；一律以 Unicode 碼位為準，跟輸出編碼無關。</p>
+        </details>
+        <p class="field-note" id="exportScopeNote">「半形」輸出 ASCII 可顯示字元（95 個，含空白），用半形的微調參數；字寬選「等寬」時檔名加 <code>_ascii</code>（每字同寬、BBX 為整格），選「不等寬」時檔名加 <code>_ascii_prop</code>（每字自己的 DWIDTH、BBX 貼緊墨跡）；「全形」輸出其餘所有碼位（不含 ASCII，ASCII 只在半形檔裡），用全形的微調參數。僅 BMP（0000–FFFF），控制字元與非字元碼位不輸出。</p>
+      </div>
+
+      <div class="tune-group">
+        <h3>檔案格式</h3>
+        <label class="field">
+          <span>換行字元</span>
+          <select id="eolSelect">
+            <option value="lf" selected>LF（Unix／X11 工具慣例，預設）</option>
+            <option value="crlf">CRLF（Windows）</option>
+          </select>
+        </label>
+        <p class="field-note">BDF 是純 ASCII 文字檔。bdftopcf 等 X11 工具以 LF 為準，CRLF 的 \r 可能黏在 FONT 行或字串屬性後面；只有你的目標程式明確要求 CRLF 時才需要改。</p>
+      </div>
+
+      <div class="tune-group">
+        <h3>字型編碼</h3>
+        <label class="field">
+          <span>輸出編碼</span>
+          <select id="fontEncodingSelect">
+            <option value="unicode" selected>Unicode（預設）</option>
+            <option value="utf8">UTF-8</option>
+            <option value="big5">Big5</option>
+            <option value="custom">其他／匯入對照表…</option>
+          </select>
+        </label>
+        <div class="encoding-import-row" id="encodingImportRow" hidden>
+          <label class="field">
+            <span>對照表檔案</span>
+            <input type="file" id="encodingTableInput" accept=".txt,.csv,text/plain" />
+          </label>
+          <p class="field-note">純文字檔，每行「目標碼　Unicode 碼」兩個十六進位數字（可用 0x 或 U+ 開頭，空白或 tab 分隔），# 開頭整行視為註解，例如 <code>0xA140 0x3000</code>。坊間常見的 Big5 變體對照表（CP950、Big5-2003、Mozilla、Big5-HKSCS 的 u2b/b2u 檔）都是這個格式，直接匯入即可。</p>
+          <p class="field-note" id="encodingImportStatus">尚未匯入對照表。</p>
+        </div>
+        <p class="field-note" id="encodingSchemeNote">半形（ASCII）的 ENCODING 永遠是 ASCII 碼位本身（Big5 的單位元組部分就是 ASCII；選 Big5 時半形檔的 registry 標成 ISO8859-1，方便跟 big5-0 全形檔搭配成組）。Unicode／UTF-8 直接用字元本身的碼位；選 Big5 會用瀏覽器內建的 Big5 對照表換算（涵蓋標準兩個字面等級，不含各家廠商造字區擴充）。目標編碼沒有對應碼位的字元，轉換時會自動略過並在完成訊息裡回報略過數量。</p>
+      </div>
+
+      <div class="tune-group tune-group-wide">
+        <h3>產生 BDF</h3>
+        <button type="button" id="convertButton" class="btn btn-primary" disabled>開始轉換</button>
+        <div class="progress-row">
+          <progress id="convertProgress" max="100" value="0"></progress>
+          <span id="convertStatus" class="convert-status">請先讀取字型檔。</span>
+        </div>
+        <div class="download-links" id="downloadLinks"></div>
+        <div class="convert-report" id="convertReport" hidden></div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-notice">
+    <p>純前端運算，字型檔不會離開你的裝置。渲染核心：FreeType 2.13.3 (WebAssembly)</p>
+  </div>
+  <div class="footer-meta">
+    <p class="copyright">2026 <strong class="brand-name">not your FONT</strong> • Released under the <a href="https://opensource.org/licenses/Apache-2.0" target="_blank" rel="noopener" class="footer-link">Apache 2.0 License</a></p>
+    <p class="footer-links">
+      <a href="https://github.com/lightgreen/notyourfont" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+      <span class="divider">•</span>
+      <a href="https://github.com/lightgreentw/notyourfont/issues" target="_blank" rel="noopener" class="footer-link">Report Issue</a>
+      <span class="divider">•</span>
+      <span class="version">v1.0.0</span>
+    </p>
+  </div>
+</footer>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

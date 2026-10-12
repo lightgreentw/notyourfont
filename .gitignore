@@ -1,0 +1,7 @@
+# 系統/編輯器雜項檔案
+.DS_Store
+Thumbs.db
+*.swp
+
+# 若之後有人在本機安裝 node 相關工具做開發用途
+node_modules/

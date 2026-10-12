@@ -1,0 +1,43 @@
+name: 重新編譯並驗證 wasm（僅手動觸發）
+
+# 這個 workflow 「不會」因為 push 而自動執行——它只有 workflow_dispatch，
+# 也就是只有你自己到 GitHub 網頁上按「Run workflow」才會跑。
+#
+# 用途：驗證 wasm/freetype.wasm 真的可以從官方 FreeType 原始碼重新編譯出來
+# （見 build/build.sh），並且跟目前 commit 進去的版本一致。平常開發、改網頁
+# 內容都不需要跑這個——只有在你動到 build/ft-bridge/ft_bridge.c 或想升級
+# FreeType 版本時才需要手動觸發一次，跑完後把新的 wasm/*.{wasm,mjs} commit
+# 回去即可。
+#
+# 這樣設計是刻意避免「每次 push 都重新編譯」：編譯 FreeType 需要安裝完整的
+# emscripten/clang/llvm 工具鏈並跑密集運算，頻繁觸發這種重度工作可能會不必要地
+# 消耗 Actions 分鐘數，也可能被 GitHub 的自動濫用偵測機制誤判。部署網站本身
+# （見 GitHub Pages 的 "Deploy from a branch" 設定，README 有說明）完全不需要
+# 用到 Actions，也就完全不會有這個問題。
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取出原始碼
+        uses: actions/checkout@v4
+
+      - name: 從 FreeType 原始碼重新編譯 wasm
+        run: bash build/build.sh
+
+      - name: 比對重新編譯的結果跟目前 commit 的版本是否一致
+        run: |
+          if git diff --stat --exit-code -- wasm/freetype.wasm wasm/freetype.mjs; then
+            echo "一致：目前 commit 的 wasm 檔案確實可以從原始碼重現。"
+          else
+            echo "不一致：重新編譯出來的 wasm 跟目前 commit 的版本不同。"
+            echo "如果這是預期中的更新（例如升級了 FreeType 版本），"
+            echo "請把新的 wasm/freetype.wasm 與 wasm/freetype.mjs commit 回 repo。"
+            exit 1
+          fi
