@@ -4,13 +4,14 @@
 
 取樣用的是編譯成 WebAssembly 的 **FreeType 2.13.3** 原生引擎（也可切換成瀏覽器 Canvas 引擎），所以點陣的判定行為跟桌面版 FreeType 一致。
 
-<figure>
-  <img src=".\screenshot_01.png" alt="not your Font 畫面展示" width="80%">
-  <figcaption>示範字型是芫荽開源字型</figcaption>
-</figure>
+<img src=".\screenshot_01.png" alt="not your Font 畫面展示" width="80%">
+<sup>(示範字型是芫荽開源字型)</sup>
 
-### 直接線上使用
-<https://lightgreentw.github.io/notyourfont/>
+<br>
+<br>
+
+- 直接線上使用
+https://lightgreentw.github.io/notyourfont/
 
 ## Not Your FONT 象徵什麼
 
