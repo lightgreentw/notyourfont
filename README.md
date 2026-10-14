@@ -9,6 +9,9 @@
   <figcaption>示範字型是芫荽開源字型</figcaption>
 </figure>
 
+### 直接線上使用
+<https://lightgreentw.github.io/notyourfont/>
+
 ## Not Your FONT 象徵什麼
 
 向量字型固然平滑且精緻，但點陣字型卻擁有無可取代的復古粒線美感與微縮靈魂。不隨波逐流於無窮放大的平滑曲線，而是透過這套轉檔工具，落實為一格格帶有微小瑕疵卻極具質感的點陣微粒。
